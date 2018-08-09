@@ -144,7 +144,7 @@ fn main() {
         score_render: render::ScoreRender::new(
             color::COLOR_GREY_LIGHT,
             color::COLOR_BLACK,
-            0.9,
+            0.9, // not really editable
             32,
         ),
         game: game::Tetris::new(),
