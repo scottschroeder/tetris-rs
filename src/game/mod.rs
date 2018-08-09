@@ -63,7 +63,11 @@ impl Score {
         self.garbage / 10
     }
 
-    pub fn wipe(&mut self, garbage: u64) {
+    pub fn score(&self) -> u64 {
+        self.points
+    }
+
+    fn wipe(&mut self, garbage: u64) {
         let multiplier = match garbage {
             0 => 0,
             1 => 40,
@@ -90,7 +94,7 @@ pub struct Tetris {
     fast_fall_timer: limit::RateLimiter,
     command_state: CommandState,
     generator: generator::TetrominoGenerator,
-    score: Score,
+    pub score: Score,
 }
 
 

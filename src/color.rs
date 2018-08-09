@@ -1,23 +1,24 @@
 // Tunable game colors
 
 
-const COLOR_RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-const COLOR_GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-const COLOR_BLUE: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+pub const COLOR_RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+pub const COLOR_GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+pub const COLOR_BLUE: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
-const COLOR_YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
-const COLOR_CYAN: [f32; 4] = [0.0, 1.0, 1.0, 1.0];
-const COLOR_PURPLE: [f32; 4] = [0.5, 0.0, 0.5, 1.0];
-const COLOR_ORANGE: [f32; 4] = [1.0, 0.4, 0.0, 1.0];
+pub const COLOR_YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
+pub const COLOR_CYAN: [f32; 4] = [0.0, 1.0, 1.0, 1.0];
+pub const COLOR_PURPLE: [f32; 4] = [0.5, 0.0, 0.5, 1.0];
+pub const COLOR_ORANGE: [f32; 4] = [1.0, 0.4, 0.0, 1.0];
 
 
-const COLOR_BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-const COLOR_GREY_DARK: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
-const COLOR_GREY_LIGHT: [f32; 4] = [0.6, 0.6, 0.6, 1.0];
-const GHOST_TILE_OPACITY: f32 = 0.15;
+pub const COLOR_BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+pub const COLOR_GREY_DARK: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
+pub const COLOR_GREY_LIGHT: [f32; 4] = [0.6, 0.6, 0.6, 1.0];
 
 pub const BACKGROUND_COLOR: [f32; 4] = [0.6; 4];
 pub const BOARD_COLOR: [f32; 4] = COLOR_GREY_DARK;
+
+const GHOST_TILE_OPACITY: f32 = 0.15;
 
 use game;
 

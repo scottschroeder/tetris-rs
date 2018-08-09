@@ -13,6 +13,7 @@ use piston::event_loop::*;
 use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL};
+use opengl_graphics::{GlyphCache, TextureSettings};
 
 
 mod tile;
@@ -40,8 +41,10 @@ const HOLD_BOARD_LEFT: f64 = WINDOW_BOARD_SIDE / 2.0 - SIDE_BOARD_WIDTH / 2.0;
 
 pub struct App {
     gl: GlGraphics,
+    glyphs: GlyphCache<'static>,
     tile_render: render::TileRender,
     tetromino_render: render::TetrominoRender,
+    score_render: render::ScoreRender,
     game: game::Tetris,
     key_mapping: input::KeyMap,
     pause: bool,
@@ -67,6 +70,10 @@ impl App {
         }
 
         self.tetromino_render.render(vp, &mut self.gl, HOLD_BOARD_LEFT, 10.0, SIDE_BOARD_WIDTH, self.game.get_hold().as_ref());
+        self.score_render.render(vp, &mut self.gl, &mut self.glyphs, HOLD_BOARD_LEFT, 500.0, SIDE_BOARD_WIDTH, &self.game.score);
+
+
+
     }
 
     fn update(&mut self, args: &UpdateArgs) {
@@ -109,12 +116,11 @@ fn main() {
         .build()
         .unwrap();
 
-//    {
-//        let font = include_bytes!("../assets/FiraSans-Regular.ttf");
-//        let factory = window.factory.clone();
-//        use opengl_graphics::{GlyphCache, TextureSettings};
-//        let c = GlyphCache::from_bytes(font, factory, TextureSettings::new()).unwrap();
-//    }
+    let glyphs = {
+        let font = include_bytes!("../assets/FiraSans-Regular.ttf");
+        //let factory = window.factory.clone();
+        GlyphCache::from_bytes(font, (), TextureSettings::new()).unwrap()
+    };
 
     //let mut glyphs = Glyphs::new(font, factory, TextureSettings::new()).unwrap();
     let mut key_map = input::KeyMap::new();
@@ -128,11 +134,18 @@ fn main() {
     // Create a new game and run it.
     let mut app = App {
         gl: GlGraphics::new(opengl),
+        glyphs,
         tile_render: render::TileRender::new(
             color::BOARD_COLOR,
         ),
         tetromino_render: render::TetrominoRender::new(
             color::BOARD_COLOR,
+        ),
+        score_render: render::ScoreRender::new(
+            color::COLOR_GREY_LIGHT,
+            color::COLOR_BLACK,
+            0.9,
+            32,
         ),
         game: game::Tetris::new(),
         key_mapping: key_map,
