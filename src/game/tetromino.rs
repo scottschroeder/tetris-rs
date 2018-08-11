@@ -19,10 +19,10 @@ pub enum Shape {
     Z,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tetromino {
     shape: Shape,
-    origin: Point,
+    pub origin: Point,
     orientation: Orientation,
 }
 

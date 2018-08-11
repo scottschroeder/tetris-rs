@@ -1,4 +1,121 @@
 #[derive(Debug, PartialEq)]
+pub struct DelayTrigger {
+    time: f64,
+    delay: f64,
+}
+
+impl DelayTrigger {
+    pub fn new(delay: f64) -> Self {
+        if delay < 0f64 {
+            panic!("Cannot wait a negative number. delay={}", delay)
+        }
+        DelayTrigger {
+            time: 0.0,
+            delay,
+        }
+    }
+
+    #[inline]
+    pub fn elapsed(&mut self, dt: f64) {
+        self.time += dt;
+    }
+
+    #[inline]
+    pub fn reset(&mut self) {
+        self.time = 0.0;
+    }
+
+    #[inline]
+    pub fn get_event(&mut self) -> bool {
+        if self.is_ready() {
+            self.reset();
+            true
+        } else {
+            false
+        }
+    }
+
+    #[inline]
+    pub fn is_ready(&self) -> bool {
+        self.time > self.delay
+    }
+}
+
+#[derive(Debug, PartialEq)]
+enum TriggerState {
+    Off,
+    Armed,
+    Fired,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct SingleFireTrigger {
+    state: TriggerState,
+    timer: DelayTrigger,
+}
+
+impl SingleFireTrigger {
+    pub fn new(delay: f64) -> Self {
+        SingleFireTrigger {
+            state: TriggerState::Off,
+            timer: DelayTrigger::new(delay),
+        }
+    }
+
+    #[inline]
+    pub fn arm(&mut self) {
+        if self.state == TriggerState::Off {
+            self.state = TriggerState::Armed;
+            self.timer.reset();
+        }
+    }
+
+    #[inline]
+    pub fn reset(&mut self) {
+        self.state = TriggerState::Off;
+    }
+
+    #[inline]
+    pub fn soft_reset(&mut self) {
+        if self.is_armed() && !self.is_ready() {
+            self.timer.reset();
+        }
+    }
+
+    #[inline]
+    pub fn elapsed(&mut self, dt: f64) {
+        self.timer.elapsed(dt)
+    }
+
+
+    #[inline]
+    pub fn is_armed(&self) -> bool {
+        self.state == TriggerState::Armed
+    }
+
+    #[inline]
+    pub fn is_ready(&self) -> bool {
+        if self.is_armed() {
+            self.timer.is_ready()
+        } else {
+            false
+        }
+    }
+
+    #[inline]
+    pub fn get_event(&mut self) -> bool {
+        if self.is_ready() {
+            trace!("Timer Event Triggered");
+            self.state = TriggerState::Fired;
+            true
+        } else {
+            false
+        }
+    }
+}
+
+
+#[derive(Debug, PartialEq)]
 enum LimiterState {
     Off,
     First,
@@ -41,12 +158,6 @@ impl RateLimiter {
 
     pub fn reset(&mut self) {
         self.state = LimiterState::Off;
-    }
-
-    pub fn adjust<F>(&mut self, f: F) where F: Fn(f64, Option<f64>) -> (f64, Option<f64>) {
-        let (new_rate, new_delay) = f(self.repeat_rate, self.repeat_delay);
-        self.repeat_rate = new_rate;
-        self.repeat_delay = new_delay;
     }
 
     pub fn get_event(&mut self) -> Option<()> {

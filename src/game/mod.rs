@@ -52,6 +52,7 @@ impl Default for GameTile {
     }
 }
 
+
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Score {
     pub points: u64,
@@ -92,6 +93,8 @@ pub struct Tetris {
     rotate_timer: limit::RateLimiter,
     gravity_timer: limit::RateLimiter,
     fast_fall_timer: limit::RateLimiter,
+    lock_trigger: limit::SingleFireTrigger,
+    lock_input_trigger: limit::SingleFireTrigger,
     command_state: CommandState,
     generator: generator::TetrominoGenerator,
     pub score: Score,
@@ -110,6 +113,8 @@ impl Tetris {
             rotate_timer: limit::RateLimiter::new(0.4f64, Some(0.4f64)),
             gravity_timer: limit::RateLimiter::new(TETRIS_BASE_GRAVITY, None),
             fast_fall_timer: limit::RateLimiter::new(0.05f64, None),
+            lock_trigger: limit::SingleFireTrigger::new(2.0),
+            lock_input_trigger: limit::SingleFireTrigger::new(0.5),
             command_state: CommandState::new(),
             generator: generator::TetrominoGenerator::new(),
             score: Score::default(),
@@ -187,6 +192,11 @@ impl Tetris {
         rows_wiped
     }
 
+    fn altitude(&self, piece: &Tetromino) -> i32 {
+        let ghost = self.ghost(piece);
+        piece.origin.y - ghost.origin.y
+    }
+
 
     fn ghost(&self, piece: &Tetromino) -> Tetromino {
         assert!(self.check_piece(piece), "Can not ghost an already unplaceable piece");
@@ -208,12 +218,17 @@ impl Tetris {
         };
 
         if event.is_some() {
-            debug!("Gravity is: {:?}", event);
             let mut test_piece = self.tetromino.clone();
             test_piece.move_down();
             if self.check_piece(&test_piece) {
                 self.tetromino = test_piece;
             } else {
+                self.lock_trigger.arm();
+                self.lock_input_trigger.arm();
+            }
+        }
+        if self.lock_trigger.is_ready() || self.lock_input_trigger.is_ready() {
+            if self.tetromino == self.ghost(&self.tetromino) {
                 self.lock();
             }
         }
@@ -232,7 +247,17 @@ impl Tetris {
             (None, _) => {}
         }
         if self.check_piece(&test_piece) {
-            self.tetromino = test_piece;
+            if self.tetromino != test_piece {
+                if self.lock_trigger.is_armed() {
+                    if self.altitude(&self.tetromino) < self.altitude(&test_piece) {
+                        self.lock_trigger.reset();
+                        self.lock_input_trigger.reset();
+                    } else {
+                        self.lock_input_trigger.soft_reset();
+                    }
+                }
+                self.tetromino = test_piece;
+            }
         }
     }
 
@@ -245,6 +270,7 @@ impl Tetris {
             test_piece.translate(test_translate);
             if self.check_piece(&test_piece) {
                 self.tetromino = test_piece;
+                self.lock_input_trigger.soft_reset();
                 return;
             }
         }
@@ -270,6 +296,8 @@ impl Tetris {
         self.fast_fall_timer.reset();
         self.slide_timer.reset();
         self.rotate_timer.reset();
+        self.lock_trigger.reset();
+        self.lock_input_trigger.reset();
     }
 
     fn update_timers(&mut self, dt: f64) {
@@ -277,6 +305,8 @@ impl Tetris {
         self.fast_fall_timer.elapsed(dt);
         self.slide_timer.elapsed(dt);
         self.rotate_timer.elapsed(dt);
+        self.lock_trigger.elapsed(dt);
+        self.lock_input_trigger.elapsed(dt);
     }
 
 
