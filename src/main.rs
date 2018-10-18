@@ -3,6 +3,8 @@ extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
 
+extern crate conrod;
+
 #[macro_use]
 extern crate log;
 extern crate pretty_env_logger;
@@ -71,9 +73,6 @@ impl App {
 
         self.tetromino_render.render(vp, &mut self.gl, HOLD_BOARD_LEFT, 10.0, SIDE_BOARD_WIDTH, self.game.get_hold().as_ref());
         self.score_render.render(vp, &mut self.gl, &mut self.glyphs, HOLD_BOARD_LEFT, 500.0, SIDE_BOARD_WIDTH, &self.game.score);
-
-
-
     }
 
     fn update(&mut self, args: &UpdateArgs) {
@@ -98,9 +97,45 @@ impl App {
     }
 }
 
-fn main() {
-    pretty_env_logger::init();
+fn font_bytes() -> &'static [u8] {
+    include_bytes!("../assets/FiraSans-Regular.ttf")
+}
 
+mod window {
+    use super::*;
+    use conrod::text::Font;
+
+    pub fn main() {
+        pretty_env_logger::init();
+
+        let width = 300;
+        let height = 200;
+        let title = "conrod demo";
+        // Change this to OpenGL::V2_1 if not working.
+        let opengl = OpenGL::V3_2;
+
+        let mut window: Window = WindowSettings::new(title, [width, height])
+            .opengl(OpenGL::V3_2)
+            .exit_on_esc(true)
+            .build()
+            .unwrap();
+
+        let mut ui = conrod::UiBuilder::new([width as f64, height as f64]).build();
+
+        ui.fonts.insert(Font::from_bytes(font_bytes()).unwrap());
+
+        let mut events = Events::new(EventSettings::new());
+        while let Some(e) = events.next(&mut window) {
+            trace!("Window event: {:#?}", e);
+        }
+    }
+}
+
+fn main() {
+    window::main();
+    return;
+
+    pretty_env_logger::init();
 
 
     // Change this to OpenGL::V2_1 if not working.
@@ -116,11 +151,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let glyphs = {
-        let font = include_bytes!("../assets/FiraSans-Regular.ttf");
-        //let factory = window.factory.clone();
-        GlyphCache::from_bytes(font, (), TextureSettings::new()).unwrap()
-    };
+    let glyphs = GlyphCache::from_bytes(font_bytes(), (), TextureSettings::new()).unwrap();
 
     //let mut glyphs = Glyphs::new(font, factory, TextureSettings::new()).unwrap();
     let mut key_map = input::KeyMap::new();
